@@ -33,8 +33,47 @@ module_param(led_gpio_pin, uint, 0644);
 MODULE_PARM_DESC(led_gpio_pin, "GPIO Pin number for the LED");
 
 
+/* When you want to register a timer with the kernel, it needs more than just a callback function to
+ * execute when the time interval gets hit.
+ * Other than configuration details, it gets inserted into a linked list of timer handlers and so needs
+ * a pointer for that, etc.
+ * But, you won't mess with those things. You'll just call convenience methods to set the callback function
+ * and how many clock ticks to call this in, and it handles the rest magically.
+ */
+static struct timer_list led_timer;
+
+// Keep a global copy of the current state of the led so we can toggle on/off during timer handler callbacks.
+static bool led_on;
+
+
+/* This is the function that we will register as the callback handler for our timer list entry.
+ * When the designated time expires, this gets called.
+ */
+static void led_timer_func(struct time_list *t) {
+    // Flip the state of the led
+    led_on = !led_on;
+
+    // The direct write to the GPIO pin through the kernel func, toggling the state between on/off
+    gpio_set_value(led_gpio_pin, led_on);
+
+    /* Update the expires on our timer_list entry so that it runs again 500ms later.
+     * Note the new expiration time must be given in jiffies, so do a conversion and offset the current jiffies
+     */
+    mod_timer(&led_timer, jiffies + msecs_to_jiffies(500));
+}
+
+
 static int __init led_init(void) {
     pr_info("gpio17LED: Init\n");
+
+    /* Get the return value from calling gpio setup commands, so we can return that value if
+     * something goes wrong.
+     */
+    int gpio_result;
+
+    /* TODO: Continue where I left off
+    */
+    gpio_result = gpio_request();
 
     return 0;
 }
