@@ -10,6 +10,10 @@ make
 ```
 sudo insmod gpio17LED.ko
 ```
+Or if you want to use a different pin number than 17 (.e.g. 18)
+```
+sudo insmod gpio17LED.ko led_gpio_pin=18
+```
 
 ### See Output
 ```
